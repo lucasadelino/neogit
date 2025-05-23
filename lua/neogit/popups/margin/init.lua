@@ -1,3 +1,4 @@
+local git = require("neogit.lib.git")
 local popup = require("neogit.lib.popup")
 local config = require("neogit.config")
 local actions = require("neogit.popups.margin.actions")
@@ -5,12 +6,14 @@ local actions = require("neogit.popups.margin.actions")
 local M = {}
 
 function M.create()
+  local order_entry = git.config.get("neogit.status.order")
+  local order = order_entry:is_set() and order_entry.value or "date"
+
   local p = popup
     .builder()
     :name("NeogitMarginPopup")
-    :option("n", "max-count", "256", "Limit number of commits", { default = "256", key_prefix = "-" })
-    :switch("o", "topo", "Order commits by", {
-      cli_suffix = "-order",
+    :config("n", "neogit.status.max_commits")
+    :config("o", "neogit.status.order", {
       options = {
         { display = "", value = "" },
         { display = "topo", value = "topo" },
@@ -31,9 +34,14 @@ function M.create()
       "Show graph in color",
       { internal = true, incompatible = { "reverse" } }
     )
-    :switch("d", "decorate", "Show refnames", { enabled = true, internal = true })
+    :config("r", "neogit.status.refnames", {
+      options = {
+        { display = "true", value = "true" },
+        { display = "false", value = "false" },
+      },
+    })
     :group_heading("Refresh")
-    :action("g", "buffer", actions.log_current)
+    :action("g", "buffer", actions.refresh)
     :new_action_group("Margin")
     :action("L", "toggle visibility", actions.toggle_visibility)
     :action("l", "cycle style", actions.cycle_date_style)

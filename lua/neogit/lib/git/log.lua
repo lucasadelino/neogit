@@ -423,9 +423,14 @@ function M.register(meta)
     state.recent = { items = {} }
 
     local count = config.values.status.recent_commit_count
+    -- local order = config.values.status.recent_commit_order
+    local order_entry = git.config.get("neogit.status.order")
+    local order = order_entry:is_set() and order_entry.value or "date"
     if count > 0 then
-      state.recent.items =
-        util.filter_map(M.list({ "--max-count=" .. tostring(count) }, nil, {}, true), M.present_commit)
+      state.recent.items = util.filter_map(
+        M.list({ "--max-count=" .. tostring(count), "--" .. order .. "-order" }, nil, {}, true),
+        M.present_commit
+      )
     end
   end
 end

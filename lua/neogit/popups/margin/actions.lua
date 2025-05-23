@@ -22,4 +22,11 @@ function M.toggle_details()
   state.set({ "margin", "details" }, new_details)
 end
 
+function M.refresh()
+  local status = require("neogit.buffers.status")
+  if status.is_open() then
+    status.instance():dispatch_refresh(nil, "user_refresh")
+  end
+end
+
 return M

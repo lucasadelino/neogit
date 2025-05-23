@@ -426,6 +426,7 @@ function M.get_default_values()
     status = {
       show_head_commit_hash = true,
       recent_commit_count = 10,
+      recent_commit_order = "date",
       HEAD_padding = 10,
       HEAD_folded = false,
       mode_padding = 3,

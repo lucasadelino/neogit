@@ -1,4 +1,5 @@
 local Ui = require("neogit.lib.ui")
+local git = require("neogit.lib.git")
 local Component = require("neogit.lib.ui.component")
 local util = require("neogit.lib.util")
 local common = require("neogit.buffers.common")
@@ -433,11 +434,22 @@ local SectionItemCommit = Component.new(function(item)
     virt = {}
   end
 
+  local show_ref_entry = git.config.get("neogit.status.refnames")
+  local show_ref = show_ref_entry:is_set() and show_ref_entry.value or "true"
+  -- local show_ref = state.get({ "NeogitMarginPopup", "decorate" }, false)
+  local displayed_ref
+  if show_ref == "false" then
+    displayed_ref = { "" }
+  else
+    displayed_ref = ref
+  end
+
   return row(
     util.merge(
       { text.highlight("NeogitObjectId")(item.commit.abbreviated_commit) },
       { text(" ") },
-      ref,
+      -- ref,
+      displayed_ref,
       ref_last,
       { text(item.commit.subject) }
     ),
