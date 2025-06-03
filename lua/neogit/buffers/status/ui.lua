@@ -374,6 +374,7 @@ local SectionItemCommit = Component.new(function(item)
   local visibility = state.get({ "margin", "visibility" }, false)
   local margin_date_style = state.get({ "margin", "date_style" }, 1)
   local details = state.get({ "margin", "details" }, false)
+  local shortstat = state.get({ "margin", "shortstat" }, false)
   local date
   local author_table = { "" }
   local date_table
@@ -382,14 +383,14 @@ local SectionItemCommit = Component.new(function(item)
 
   if margin_date_style == 1 then -- relative date (short)
     local unpacked = vim.split(item.commit.rel_date, " ")
-    -- above, we added a space if the rel_date started with a single number
+    -- above, we added a space if the rel_date started with a single digit
     -- we get the last two elements to deal with that
     local date_number = unpacked[#unpacked - 1]
     local date_quantifier = unpacked[#unpacked]
     if date_quantifier:match("months?") then
       date_quantifier = date_quantifier:gsub("m", "M") -- to distinguish from minutes
     end
-    -- add back the space if we have a single number
+    -- add back the space if we have a single digit
     local left_pad
     if #unpacked > 2 then
       left_pad = " "
@@ -423,13 +424,53 @@ local SectionItemCommit = Component.new(function(item)
     }
   end
 
+  -- Shortstat
+  local cli_shortstat
+  -- local shortstat_table
+  local logger = require("neogit.logger")
+  local insertions
+  local deletions
+  local files_changed
+
+  if shortstat then
+    cli_shortstat = git.cli.show.format("").shortstat.args(item.commit.oid).call().stdout[1]
+    -- local ricardo =
+    --   cli_shortstat:match(" (%d+) files? changed, (%d+) insertions?%(+%)[, ]*(%d*) deletions?%(-%)")
+    files_changed = cli_shortstat:match("^ (%d+) files?")
+
+    insertions = cli_shortstat:match("(%d+) insertions?")
+    insertions = insertions and insertions or "0"
+
+    deletions = cli_shortstat:match("(%d+) deletions?")
+    deletions = deletions and deletions or "0"
+
+    logger.debug("cli_shortstat:" .. cli_shortstat)
+    logger.debug("files_changed:" .. files_changed)
+    logger.debug("insertions:" .. insertions)
+    logger.debug("deletions:" .. deletions)
+
+    shortstat_table = { cli_shortstat, "Special" }
+  end
+
   local virt
   if visibility then
-    virt = {
-      { " ", "Constant" },
-      author_table,
-      date_table,
-    }
+    if shortstat then
+      virt = {
+        { " ", "Constant" },
+        { insertions .. "+", "NeogitDiffAdd" },
+        { " ", "Constant" },
+        { deletions .. "-", "NeogitDiffDelete" },
+        { " ", "Constant" },
+        { files_changed, "NeogitSubtleText" },
+        -- shortstat_table,
+      }
+    else
+      virt = {
+        { " ", "Constant" },
+        author_table,
+        date_table,
+      }
+    end
   else
     virt = {}
   end
@@ -444,13 +485,57 @@ local SectionItemCommit = Component.new(function(item)
     displayed_ref = ref
   end
 
+  -- FIXME: This was copypasted from buffers.common
+  -- FIXME: This works!! But the graph prints extra lines to render connectors... gotta think about what to do here
+  local function build_graph(graph)
+    if type(graph) == "table" then
+      return util.map(graph, function(g)
+        return text(g.text .. " ", { highlight = string.format("NeogitGraph%s", g.color) })
+      end)
+    else
+      return { text(graph .. " ", { highlight = "Include" }) }
+    end
+  end
+
+  local graph_entry = git.config.get("neogit.status.graph")
+  local graph = graph_entry:is_set() and graph_entry.value or "false"
+  local displayed_graph
+  if graph == "false" then
+    displayed_graph = { "" }
+  else
+    displayed_graph = build_graph(item.commit.graph)
+  end
+
+  -- local shortstat
+  -- -- commit.shortstat = line:match(" (%d+) files? changed, (%d+) insertions?%(+%)[, ]*(%d*) deletions?%(-%)")
+  -- -- local shortstat = line:match("^ (%d+) files? changed.+")
+  -- local shortstat = line:match("^%s(%d+) files? changed.+")
+  -- -- line:match(" (%d+) files? changed, (%d+) insertions?%(+%)[, ]*(%d*) deletions?%(-%)")
+  -- -- commit.shortstat = line:match(" (%d+) files? changed")
+  -- table.insert(commit.shortstat, shortstat)
+
+  -- local diffs = item.diff
+  -- -- print("ate")
+  -- -- print(item.commit.description)
+  -- if diffs then
+  --   -- print("eyy")
+  --   -- print(item.commit.description)
+  --   print(diffs)
+  --   -- for diff in diffs do
+  --   --   print(diff)
+  --   --   if diff.shortstat and diff.shortstat ~= "" then
+  --   --     -- shortstat = text.highlight("NeogitSubtleText")(" (" .. diff.shortstat .. ")")
+  --   --   end
+  --   -- end
+  -- end
+
   return row(
     util.merge(
       { text.highlight("NeogitObjectId")(item.commit.abbreviated_commit) },
       { text(" ") },
-      -- ref,
+      displayed_graph,
       displayed_ref,
-      ref_last,
+      ref_last, -- TODO: What is this?
       { text(item.commit.subject) }
     ),
     {

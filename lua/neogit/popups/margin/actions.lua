@@ -22,6 +22,35 @@ function M.toggle_details()
   state.set({ "margin", "details" }, new_details)
 end
 
+function M.toggle_shortstat()
+  local shortstat = state.get({ "margin", "shortstat" }, false)
+  local new_shortstat = not shortstat
+  state.set({ "margin", "shortstat" }, new_shortstat)
+end
+
+-- function M.toggle_shortstat()
+--   local git = require("neogit.lib.git")
+--   local logger = require("neogit.logger")
+--   local commits = git.log.list { "--max-count=1", "--shortstat" }
+--   local function dump(o)
+--     if type(o) == "table" then
+--       local s = "{ "
+--       for k, v in pairs(o) do
+--         if type(k) ~= "number" then
+--           k = '"' .. k .. '"'
+--         end
+--         s = s .. "[" .. k .. "] = " .. dump(v) .. ","
+--       end
+--       return s .. "} "
+--     else
+--       return tostring(o)
+--     end
+--   end
+--   logger.debug(dump(commits))
+--   local stattie = git.cli.show.format("").shortstat.args(commits[1].oid).call().stdout[1]
+--   logger.debug(stattie)
+-- end
+
 function M.refresh()
   local status = require("neogit.buffers.status")
   if status.is_open() then

@@ -21,18 +21,28 @@ function M.create()
         { display = "date", value = "date" },
       },
     })
-    :switch("g", "graph", "Show graph", {
-      enabled = true,
-      internal = true,
-      incompatible = { "reverse" },
-      dependent = { "color" },
+    :config("g", "neogit.status.graph", {
+      -- enabled = true,
+      -- internal = true,
+      -- incompatible = { "reverse" },
+      -- dependent = { "color" },
+      options = {
+        { display = "true", value = "true" },
+        { display = "false", value = "false" },
+      },
     })
-    :switch_if(
+    :config_if(
       config.values.graph_style == "ascii" or config.values.graph_style == "kitty",
       "c",
-      "color",
-      "Show graph in color",
-      { internal = true, incompatible = { "reverse" } }
+      "neogit.status.color",
+      -- "Show graph in color",
+      -- { internal = true, incompatible = { "reverse" } }
+      {
+        options = {
+          { display = "true", value = "true" },
+          { display = "false", value = "false" },
+        },
+      }
     )
     :config("r", "neogit.status.refnames", {
       options = {
@@ -41,12 +51,12 @@ function M.create()
       },
     })
     :group_heading("Refresh")
-    :action("g", "buffer", actions.refresh)
+    :action("G", "buffer", actions.refresh)
     :new_action_group("Margin")
     :action("L", "toggle visibility", actions.toggle_visibility)
     :action("l", "cycle style", actions.cycle_date_style)
     :action("d", "toggle details", actions.toggle_details)
-    :action("x", "toggle shortstat", actions.log_current)
+    :action("x", "toggle shortstat", actions.toggle_shortstat)
     :build()
 
   p:show()

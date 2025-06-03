@@ -31,6 +31,7 @@ local commit_header_pat = "([| ]*)(%*?)([| ]*)commit (%w+)"
 ---@field rel_date string
 ---@field log_date string
 ---@field unix_date string
+---@field shortstat string? number of files changed
 
 ---Parses the provided list of lines into a CommitLogEntry
 ---@param raw string[]
@@ -169,6 +170,20 @@ function M.parse(raw)
 
       advance()
     end
+
+    -- -- commit.shortstat = line:match(" (%d+) files? changed, (%d+) insertions?%(+%)[, ]*(%d*) deletions?%(-%)")
+    -- -- local shortstat = line:match("^ (%d+) files? changed.+")
+    -- local shortstat = line:match("^%s(%d+) files? changed.+")
+    -- -- line:match(" (%d+) files? changed, (%d+) insertions?%(+%)[, ]*(%d*) deletions?%(-%)")
+    -- -- commit.shortstat = line:match(" (%d+) files? changed")
+    -- table.insert(commit.shortstat, shortstat)
+
+    -- -- Parse shortstat if present
+    -- if line and line:match("^ %d+ files? changed") then
+    --   commit.shortstat = line:match("^ (%d+) files? changed")
+    --   line = lpeek()
+    --   advance()
+    -- end
 
     table.insert(commits, commit)
   end
@@ -369,12 +384,16 @@ M.list = util.memoize(function(options, graph, files, hidden, graph_color)
   options, signature = show_signature(options)
   options = set_date_format(options)
 
-  local output = git.cli.log
+  local output = git
+    .cli
+    .log
     .format(format(signature))
     .args("--no-patch")
     .arg_list(options)
+    -- .args("--shortstat")
     .files(unpack(files))
-    .call({ hidden = hidden, ignore_error = hidden }).stdout
+    .call({ hidden = hidden, ignore_error = hidden })
+    .stdout
 
   local commits = record.decode(output) ---@type CommitLogEntry[]
   if vim.tbl_isempty(commits) then
@@ -426,9 +445,31 @@ function M.register(meta)
     -- local order = config.values.status.recent_commit_order
     local order_entry = git.config.get("neogit.status.order")
     local order = order_entry:is_set() and order_entry.value or "date"
+
+    -- local shortstat_entry = git.config.get("neogit.status.shortstat")
+    -- local shortstat = shortstat_entry:is_set() and shortstat_entry.value or "false"
+    -- if shortstat == "false" then
+    --   shortstat = ""
+    -- else
+    --   shortstat = "--shortstat"
+    -- end
+
+    -- local graph_entry = git.config.get("neogit.status.graph")
+    -- local graph = graph_entry:is_set() and graph_entry.value or "false"
+    -- if graph == "false" then
+    --   graph = ""
+    -- else
+    --   graph = "--graph"
+    -- end
+    -- local graph = "--graph"
+
     if count > 0 then
       state.recent.items = util.filter_map(
-        M.list({ "--max-count=" .. tostring(count), "--" .. order .. "-order" }, nil, {}, true),
+        -- M.list({ "--max-count=" .. tostring(count), "--" .. order .. "-order", graph }, nil, {}, true),
+        M.list({ "--max-count=" .. tostring(count), "--" .. order .. "-order" }, {}, {}, true),
+        -- M.list({ "--max-count=" .. tostring(count), "--" .. order .. "-order", shortstat }, {}, {}, true),
+        -- M.list({ "--max-count=" .. tostring(count), "--" .. order .. "-order", " --shortstat" }, {}, {}, true),
+        -- M.list({ "--max-count=" .. tostring(count), "--" .. order .. "-order" }, nil, {}, true),
         M.present_commit
       )
     end
