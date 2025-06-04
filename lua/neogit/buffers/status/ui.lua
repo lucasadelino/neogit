@@ -434,22 +434,17 @@ local SectionItemCommit = Component.new(function(item)
 
   if shortstat then
     cli_shortstat = git.cli.show.format("").shortstat.args(item.commit.oid).call().stdout[1]
-    -- local ricardo =
-    --   cli_shortstat:match(" (%d+) files? changed, (%d+) insertions?%(+%)[, ]*(%d*) deletions?%(-%)")
     files_changed = cli_shortstat:match("^ (%d+) files?")
+    -- FIXME: Needs clamping
+    files_changed = util.left_pad(files_changed, 4)
 
     insertions = cli_shortstat:match("(%d+) insertions?")
-    insertions = insertions and insertions or "0"
+    insertions = insertions and insertions .. "+" or " "
+    insertions = util.left_pad(insertions, 5)
 
     deletions = cli_shortstat:match("(%d+) deletions?")
-    deletions = deletions and deletions or "0"
-
-    logger.debug("cli_shortstat:" .. cli_shortstat)
-    logger.debug("files_changed:" .. files_changed)
-    logger.debug("insertions:" .. insertions)
-    logger.debug("deletions:" .. deletions)
-
-    shortstat_table = { cli_shortstat, "Special" }
+    deletions = deletions and deletions .. "-" or " "
+    deletions = util.left_pad(deletions, 5)
   end
 
   local virt
@@ -457,12 +452,11 @@ local SectionItemCommit = Component.new(function(item)
     if shortstat then
       virt = {
         { " ", "Constant" },
-        { insertions .. "+", "NeogitDiffAdd" },
+        { insertions, "NeogitDiffAdd" },
         { " ", "Constant" },
-        { deletions .. "-", "NeogitDiffDelete" },
+        { deletions, "NeogitDiffDelete" },
         { " ", "Constant" },
         { files_changed, "NeogitSubtleText" },
-        -- shortstat_table,
       }
     else
       virt = {
