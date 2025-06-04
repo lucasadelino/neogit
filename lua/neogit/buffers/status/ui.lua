@@ -432,16 +432,17 @@ local SectionItemCommit = Component.new(function(item)
 
   if shortstat then
     cli_shortstat = git.cli.show.format("").shortstat.args(item.commit.oid).call().stdout[1]
+
     files_changed = cli_shortstat:match("^ (%d+) files?")
-    -- FIXME: Needs clamping
+    files_changed = util.pad_left_and_clamp(files_changed, 3)
     files_changed = util.left_pad(files_changed, 4)
 
     insertions = cli_shortstat:match("(%d+) insertions?")
-    insertions = insertions and insertions .. "+" or " "
+    insertions = insertions and util.pad_left_and_clamp(insertions, 4) .. "+" or " "
     insertions = util.left_pad(insertions, 5)
 
     deletions = cli_shortstat:match("(%d+) deletions?")
-    deletions = deletions and deletions .. "-" or " "
+    deletions = deletions and util.pad_left_and_clamp(deletions, 4) .. "-" or " "
     deletions = util.left_pad(deletions, 5)
   end
 
@@ -469,19 +470,19 @@ local SectionItemCommit = Component.new(function(item)
 
   local show_ref_entry = git.config.get("neogit.status.refnames")
   local show_ref = show_ref_entry:is_set() and show_ref_entry.value or "true"
-  local displayed_ref
+  local ref_display
   if show_ref == "false" then
-    displayed_ref = { "" }
+    ref_display = { "" }
   else
-    displayed_ref = ref
+    ref_display = ref
   end
 
   return row(
     util.merge(
       { text.highlight("NeogitObjectId")(item.commit.abbreviated_commit) },
       { text(" ") },
-      displayed_ref,
-      ref_last, -- TODO: What is this?
+      ref_display,
+      ref_last,
       { text(item.commit.subject) }
     ),
     {

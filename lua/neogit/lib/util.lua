@@ -269,6 +269,10 @@ function M.str_clamp(str, len, sep)
   return M.str_min_width(M.str_truncate(str, len - 1, ""), len, sep or " ")
 end
 
+function M.pad_left_and_clamp(str, len, sep)
+  return M.left_pad(M.str_truncate(str, len - 1, ""), len, sep or " ")
+end
+
 --- Splits a string every n characters, respecting word boundaries
 ---@param str string
 ---@param len integer
