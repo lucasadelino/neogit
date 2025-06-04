@@ -206,6 +206,7 @@ function M.str_min_width(str, len, sep)
   return str .. string.rep(sep or " ", len - length)
 end
 
+-- Same as str_min_width, but adds spaces to the left (instead of right)
 function M.left_pad(str, len, sep)
   local length = vim.fn.strdisplaywidth(str)
   if length > len then

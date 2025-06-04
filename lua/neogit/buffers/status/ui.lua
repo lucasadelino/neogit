@@ -426,8 +426,6 @@ local SectionItemCommit = Component.new(function(item)
 
   -- Shortstat
   local cli_shortstat
-  -- local shortstat_table
-  local logger = require("neogit.logger")
   local insertions
   local deletions
   local files_changed
@@ -471,7 +469,6 @@ local SectionItemCommit = Component.new(function(item)
 
   local show_ref_entry = git.config.get("neogit.status.refnames")
   local show_ref = show_ref_entry:is_set() and show_ref_entry.value or "true"
-  -- local show_ref = state.get({ "NeogitMarginPopup", "decorate" }, false)
   local displayed_ref
   if show_ref == "false" then
     displayed_ref = { "" }
@@ -479,55 +476,10 @@ local SectionItemCommit = Component.new(function(item)
     displayed_ref = ref
   end
 
-  -- FIXME: This was copypasted from buffers.common
-  -- FIXME: This works!! But the graph prints extra lines to render connectors... gotta think about what to do here
-  local function build_graph(graph)
-    if type(graph) == "table" then
-      return util.map(graph, function(g)
-        return text(g.text .. " ", { highlight = string.format("NeogitGraph%s", g.color) })
-      end)
-    else
-      return { text(graph .. " ", { highlight = "Include" }) }
-    end
-  end
-
-  local graph_entry = git.config.get("neogit.status.graph")
-  local graph = graph_entry:is_set() and graph_entry.value or "false"
-  local displayed_graph
-  if graph == "false" then
-    displayed_graph = { "" }
-  else
-    displayed_graph = build_graph(item.commit.graph)
-  end
-
-  -- local shortstat
-  -- -- commit.shortstat = line:match(" (%d+) files? changed, (%d+) insertions?%(+%)[, ]*(%d*) deletions?%(-%)")
-  -- -- local shortstat = line:match("^ (%d+) files? changed.+")
-  -- local shortstat = line:match("^%s(%d+) files? changed.+")
-  -- -- line:match(" (%d+) files? changed, (%d+) insertions?%(+%)[, ]*(%d*) deletions?%(-%)")
-  -- -- commit.shortstat = line:match(" (%d+) files? changed")
-  -- table.insert(commit.shortstat, shortstat)
-
-  -- local diffs = item.diff
-  -- -- print("ate")
-  -- -- print(item.commit.description)
-  -- if diffs then
-  --   -- print("eyy")
-  --   -- print(item.commit.description)
-  --   print(diffs)
-  --   -- for diff in diffs do
-  --   --   print(diff)
-  --   --   if diff.shortstat and diff.shortstat ~= "" then
-  --   --     -- shortstat = text.highlight("NeogitSubtleText")(" (" .. diff.shortstat .. ")")
-  --   --   end
-  --   -- end
-  -- end
-
   return row(
     util.merge(
       { text.highlight("NeogitObjectId")(item.commit.abbreviated_commit) },
       { text(" ") },
-      displayed_graph,
       displayed_ref,
       ref_last, -- TODO: What is this?
       { text(item.commit.subject) }
