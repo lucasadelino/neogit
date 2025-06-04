@@ -206,6 +206,15 @@ function M.str_min_width(str, len, sep)
   return str .. string.rep(sep or " ", len - length)
 end
 
+function M.left_pad(str, len, sep)
+  local length = vim.fn.strdisplaywidth(str)
+  if length > len then
+    return str
+  end
+
+  return string.rep(sep or " ", len - length) .. str
+end
+
 function M.slice(tbl, s, e)
   local pos, new = 1, {}
 
