@@ -370,18 +370,23 @@ local SectionItemCommit = Component.new(function(item)
   end
 
   -- Render author and date in margin
-  local state = require("neogit.lib.state")
-  local visibility = state.get({ "margin", "visibility" }, false)
-  local margin_date_style = state.get({ "margin", "date_style" }, 1)
-  local details = state.get({ "margin", "details" }, false)
-  local shortstat = state.get({ "margin", "shortstat" }, false)
+  local details_config = git.config.get("neogit.margin.details")
+  local date_style_config = git.config.get("neogit.margin.style")
+  local visibility_config = git.config.get("neogit.margin.show")
+  local margin_type_config = git.config.get("neogit.margin.type")
+
+  local details = details_config:is_set() and details_config.value or "false"
+  local date_style = date_style_config:is_set() and date_style_config.value or "relative_short"
+  local visibility = visibility_config:is_set() and visibility_config.value or "false"
+  local margin_type = margin_type_config:is_set() and margin_type_config.value or "name_date"
+
   local date
   local author_table = { "" }
   local date_table
   local date_width = 10
-  local clamp_width = 30 -- to avoid having too much space when relative date is short
+  local clamp_width = 30 -- to avoid too much space when relative date is short
 
-  if margin_date_style == 1 then -- relative date (short)
+  if date_style == "relative_short" then
     local unpacked = vim.split(item.commit.rel_date, " ")
     -- above, we added a space if the rel_date started with a single digit
     -- we get the last two elements to deal with that
@@ -400,7 +405,7 @@ local SectionItemCommit = Component.new(function(item)
     date = left_pad .. date_number .. date_quantifier:sub(1, 1)
     date_width = 3
     clamp_width = 23
-  elseif margin_date_style == 2 then -- relative date (long)
+  elseif date_style == "relative_long" then
     date = item.commit.rel_date
     date_width = 10
   else -- local iso date
@@ -417,7 +422,7 @@ local SectionItemCommit = Component.new(function(item)
 
   date_table = { util.str_min_width(date, date_width), "Special" }
 
-  if details then
+  if details == "true" then
     author_table = {
       util.str_clamp(item.commit.author_name, clamp_width - (#date > date_width and #date or date_width)),
       "NeogitGraphAuthor",
@@ -426,11 +431,11 @@ local SectionItemCommit = Component.new(function(item)
 
   -- Shortstat
   local cli_shortstat
+  local files_changed
   local insertions
   local deletions
-  local files_changed
 
-  if shortstat then
+  if margin_type == "shortstat" then
     cli_shortstat = git.cli.show.format("").shortstat.args(item.commit.oid).call().stdout[1]
 
     files_changed = cli_shortstat:match("^ (%d+) files?")
@@ -447,8 +452,8 @@ local SectionItemCommit = Component.new(function(item)
   end
 
   local virt
-  if visibility then
-    if shortstat then
+  if visibility == "true" then
+    if margin_type == "shortstat" then
       virt = {
         { " ", "Constant" },
         { insertions, "NeogitDiffAdd" },
@@ -468,7 +473,7 @@ local SectionItemCommit = Component.new(function(item)
     virt = {}
   end
 
-  local show_ref_entry = git.config.get("neogit.status.refnames")
+  local show_ref_entry = git.config.get("neogit.margin.refnames")
   local show_ref = show_ref_entry:is_set() and show_ref_entry.value or "true"
   local ref_display
   if show_ref == "false" then

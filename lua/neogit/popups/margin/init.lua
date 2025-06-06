@@ -7,7 +7,7 @@ function M.create()
   local p = popup
     .builder()
     :name("NeogitMarginPopup")
-    :config("o", "neogit.status.order", {
+    :config("o", "neogit.margin.order", {
       options = {
         { display = "", value = "" },
         { display = "topo", value = "topo" },
@@ -15,7 +15,7 @@ function M.create()
         { display = "date", value = "date" },
       },
     })
-    :config("r", "neogit.status.refnames", {
+    :config("r", "neogit.margin.refnames", {
       options = {
         { display = "true", value = "true" },
         { display = "false", value = "false" },
@@ -23,11 +23,31 @@ function M.create()
     })
     :group_heading("Refresh")
     :action("g", "buffer", actions.refresh) -- Needs to be "G" if implementing graph as config
-    :new_action_group("Margin")
-    :action("L", "toggle visibility", actions.toggle_visibility)
-    :action("l", "cycle style", actions.cycle_date_style)
-    :action("d", "toggle details", actions.toggle_details)
-    :action("x", "toggle shortstat", actions.toggle_shortstat)
+    :config("L", "neogit.margin.show", {
+      options = {
+        { display = "true", value = "true" },
+        { display = "false", value = "false" },
+      },
+    })
+    :config("d", "neogit.margin.details", {
+      options = {
+        { display = "true", value = "true" },
+        { display = "false", value = "false" },
+      },
+    })
+    :config("l", "neogit.margin.style", {
+      options = {
+        { display = "relative_short", value = "relative_short" },
+        { display = "relative_long", value = "relative_long" },
+        { display = "iso-like", value = "iso-like" },
+      },
+    })
+    :config("x", "neogit.margin.type", {
+      options = {
+        { display = "name_date", value = "name_date" },
+        { display = "shortstat", value = "shortstat" },
+      },
+    })
     :build()
 
   p:show()

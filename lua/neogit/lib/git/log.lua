@@ -423,8 +423,7 @@ function M.register(meta)
     state.recent = { items = {} }
 
     local count = config.values.status.recent_commit_count
-    -- local order = config.values.status.recent_commit_order
-    local order_entry = git.config.get("neogit.status.order")
+    local order_entry = git.config.get("neogit.margin.order")
     local order = order_entry:is_set() and order_entry.value or "date"
 
     if count > 0 then
